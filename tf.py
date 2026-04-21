@@ -1,4 +1,4 @@
-#!/home/rrd/rrdrio/util/miniconda/envs/ts03/bin/python
+#!/home/rrd/miniconda3/envs/ts.py313/bin/python
 
 import os
 import datetime
@@ -19,7 +19,7 @@ import wingen as wg
 import baseline as bl
 import stuff
 import ar_lstm
-import transformer
+#import transformer
 #from statsmodels.tsa.arima.model import ARIMA
 #import tensorflow_probability as tfp
 
@@ -38,14 +38,13 @@ L_recurrent_neural_network = False
 L_mlst_baseline = False 
 L_mlst_repeat_baseline = False
 L_mlst_linear = False
-L_mlst_dense = False
+L_mlst_dense = True
 L_mlst_сonvolution_neural_network = True
-L_mlst_recurrent_neural_network = True
+L_mlst_recurrent_neural_network = False
 L_mlst_2level_recurrent_neural_network =False
 L_mlst_gated_recurrent_units = False
 
 L_mlst_bidirectional_lstm = False
-L_mlst_transformer = False
 
 L_mlst_autoregressive_recurrent_neural_network = False
 
@@ -89,11 +88,14 @@ pc_test  = 0.2
 
 MAX_EPOCHS = 15
 
+
 #INPUT_WIDTH = 800
 #OUT_STEPS   = 240
 
 INPUT_WIDTH = 240
 OUT_STEPS   = 72
+
+
 
 if L_mlst_repeat_baseline:
   OUT_STEPS = INPUT_WIDTH
@@ -107,6 +109,8 @@ LABEL_WIDTH = INPUT_WIDTH - (CONV_WIDTH - 1)
 
 max_subplots = 6
 
+
+######################################
 
 df = pd.DataFrame()
 
@@ -271,55 +275,6 @@ ax = sns.violinplot(x='Column', y='Normalized', data=df_std)
 #ax.set_xticklabels(df.keys(), rotation=90)
 #qplt.show()
 
-
-if False:
-  w1 = wg.WindowGenerator(input_width=24, label_width=1, shift=24, train_df = train_df, val_df = val_df, test_df = test_df, label_columns=[varid[0]])
-  print (w1)
-
-
-  # check: stack three slices, the length of the total window.
-  example_window = tf.stack([np.array(train_df[:w1.total_window_size]),
-                            np.array(train_df[100:100+w1.total_window_size]),
-                            np.array(train_df[200:200+w1.total_window_size])])
-
-  #print ("example_window  \n" + str(train_df[:w1.total_window_size]))
-  #print (example_window)
-
-  example_inputs, example_labels = w1.split_window(example_window)
-
-  print('All shapes are: (batch, time, features)')
-  print(f'Window shape: {example_window.shape}')
-  print(f'Inputs shape: {example_inputs.shape}')
-  print(f'Labels shape: {example_labels.shape}')
-
-  w1.example1 = example_inputs, example_labels
-
-  #for var in varid:
-  #  w1.plot(plot_col = var)
-
-  #plt.show()
-
-
-  single_step_window = wg.WindowGenerator(input_width=24, label_width=1, shift=24,
-                                          train_df = train_df, val_df = val_df, test_df = test_df,
-                                          train_mean = train_mean, train_std = train_std,
-                                          label_columns=[ varid[0] ])
-
-  print ("\n single_step_window \n" + str(single_step_window))
-
-
-  single_step_window
-
-  w1.train.element_spec
-
-  print (single_step_window.train)
-
-
-  for example_inputs, example_labels in single_step_window.train.take(1):
-    print (single_step_window.train.take(1))
-    print ("++")
-    print(f'Inputs shape (batch, time, features): {example_inputs.shape}')
-    print(f'Labels shape (batch, time, features): {example_labels.shape}')
 
 
 
@@ -860,120 +815,8 @@ if L_mlst_bidirectional_lstm:
     multi_window.plot(models = [ multi_bilstm_model ], max_subplots = max_subplots, title=multi_bilstm_model["title_long"])
 
 
-if L_mlst_transformer:
-  print (train_df)
-  print (multi_window.test)
-  input_shape = train_df.shape
-  print (input_shape)
-  
-  if True:
-    for example_inputs, example_labels in multi_window.train.take(INPUT_WIDTH):
-      print (single_step_window.train.take(1))
-      print ("++")
-      print(f'Inputs shape (batch, time, features): {example_inputs.shape}')
-      print(f'Labels shape (batch, time, features): {example_labels.shape}')
-      break
-  
-  input_shape = example_inputs.shape
-  print (input_shape)
-  
-  multi_transformer_model = {
-    "title_long":  "Multi step transformer",
-    "title_short": "mlst_transformer",
-    "model": transformer.build_model(
-      input_shape,
-      head_size=256,
-      num_heads=4,
-      ff_dim=32,
-      num_transformer_blocks=4,
-      mlp_units=[128],
-      mlp_dropout=0.4,
-      dropout=0.25,
-  )}
-  print(); print (multi_transformer_model["title_long"]); print()
-  
-  print ("-------------------123")
-  
-  if False:
-    multi_transformer_model["model"].compile( loss="sparse_categorical_crossentropy", optimizer=keras.optimizers.Adam(learning_rate=1e-4), metrics=["sparse_categorical_accuracy"])
-    
-    callbacks = [keras.callbacks.EarlyStopping(patience=10, restore_best_weights=True)]
-    
-    model.fit(
-        x_train,
-        y_train,
-        validation_split=0.2,
-        epochs=150,
-        batch_size=64,
-        callbacks=callbacks,
-    )
-    
-    model.evaluate(x_test, y_test, verbose=1)
-  
-  history = stuff.compile_and_fit(multi_transformer_model["model"], multi_window, MAX_EPOCHS=MAX_EPOCHS)
-  
-  multi_transformer_model["history"] = history
-  
-  multi_val_performance['biLSTM'] = multi_transformer_model["model"].evaluate(multi_window.val, return_dict=True)
-  multi_performance['biLSTM'] = multi_transformer_model["model"].evaluate(multi_window.test, verbose=0, return_dict=True)
-  
-  multi_window_models.append( multi_transformer_model )
-  
-  if single_plot:
-    multi_window.plot(models = [ multi_transformer_model ], max_subplots = max_subplots, title=multi_transformer_model["title_long"])
 
 
-if False:
-  if L_arima:
-    arima_model = {
-      "title_long":  "AutoRegressive Integrated Moving Average (ARIMA) model",
-      "title_short": "arima",
-      "model": tfp.sts.AutoregressiveIntegratedMovingAverage(
-          ar_order,
-          ma_order,
-          integration_degree=0,
-          ar_coefficients_prior=None,
-          ma_coefficients_prior=None,
-          level_drift_prior=None,
-          level_scale_prior=None,
-          initial_state_prior=None,
-          ar_coefficient_constraining_bijector=None,
-          ma_coefficient_constraining_bijector=None,
-          observed_time_series=None,
-          name=None
-      )}
-    print(); print (arima_model["title_long"]); print()
-    
-    history = stuff.compile_and_fit(arima_model["model"], multi_window, MAX_EPOCHS=MAX_EPOCHS)
-    
-    arima_model["history"] = history
-    
-    multi_val_performance['GRU'] = arima_model["model"].evaluate(multi_window.val, return_dict=True)
-    multi_performance['GRU'] = arima_model["model"].evaluate(multi_window.test, verbose=0, return_dict=True)
-    
-    multi_window_models.append( arima_model )
-    
-    if single_plot:
-      multi_window.plot(models = [ arima_model ], max_subplots = max_subplots, title=arima_model["title_long"])
-    
-    
-    if False:
-      pd.plotting.autocorrelation_plot(df['sst'])
-
-      # fit model
-      model = ARIMA(df['sst'], order=(5,1,0))
-      model_fit = model.fit()
-      # summary of fit model
-      print(model_fit.summary())
-      # line plot of residuals
-      residuals = pd.DataFrame(model_fit.resid)
-      residuals.plot()
-
-      # density plot of residuals
-      residuals.plot(kind='kde')
-      # summary stats of residuals
-      print(residuals.describe())
-  
 
 
 

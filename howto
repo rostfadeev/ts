@@ -1,0 +1,11 @@
+conda create --name ts.py313 python=3.13
+conda activate ts.py313
+
+conda install xarray cudatoolkit conda-forge::gcsfs
+conda install keras
+conda install matplotlib
+conda install tensorflow
+conda install ipython
+conda install seaborn
+conda install -c conda-forge more-itertools
+
