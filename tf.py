@@ -66,8 +66,10 @@ if expid == "sst":
   
   fnin = "era5-<var>-00-<lon>-<lat>-upd.csv"
   varid = [ "sst", "mslp", "tp" ]
-  lonid = [  "181" ]
-  latid = [  "32"  ]
+  #lonid = [  "181" ]
+  #latid = [  "32"  ]
+  lonid = [  "30" ]
+  latid = [  "80"  ]
   
 elif expid == "t2m":
   dirin = "../data/"
@@ -107,7 +109,7 @@ LABEL_WIDTH = INPUT_WIDTH - (CONV_WIDTH - 1)
 #INPUT_WIDTH = LABEL_WIDTH + (CONV_WIDTH - 1)
 
 
-max_subplots = 6
+max_subplots = 3
 
 
 ######################################
